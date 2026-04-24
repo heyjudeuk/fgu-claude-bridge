@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root version="4.1" release="8.5">
+  <properties>
+    <n>Claude AI Bridge</n>
+    <categoryname>Utility</categoryname>
+    <version>1.0</version>
+    <author>Claude AI Bridge</author>
+    <description>Connects Fantasy Grounds to Claude AI. GM slash commands write to console.log; Python monitors and injects responses via pyautogui.</description>
+  </properties>
+
+  <base>
+    <script name="ClaudeBridge" file="scripts/claude_bridge.lua"/>
+  </base>
+</root>
