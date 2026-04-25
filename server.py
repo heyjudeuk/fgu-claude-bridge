@@ -182,30 +182,50 @@ def poll_chatlog():
 # ---------------------------------------------------------------------------
 # System prompt
 # ---------------------------------------------------------------------------
-def build_system_prompt() -> str:
+def build_system_prompt() -> list:
+    """
+    Returns a list of system prompt blocks with cache_control markers on the
+    static markdown files. Anthropic caches these server-side for 5 minutes,
+    charging ~90% less for cached input tokens on subsequent calls within
+    that window. The instructions block is NOT cached as current_scene changes.
+    """
+    blocks = []
 
-    history_block = (
-        "\n================================================================================\n"
-        "CAMPAIGN HISTORY — what has happened so far\n"
-        "================================================================================\n"
-        f"{campaign_history}\n"
-        "================================================================================\n"
-    ) if campaign_history else ""
+    if campaign_history:
+        blocks.append({
+            "type": "text",
+            "text": (
+                "================================================================================\n"
+                "CAMPAIGN HISTORY — what has happened so far\n"
+                "================================================================================\n"
+                f"{campaign_history}\n"
+                "================================================================================"
+            ),
+            "cache_control": {"type": "ephemeral"}
+        })
 
-    notes_block = (
-        "\n================================================================================\n"
-        "SESSION NOTES — tonight's scenes, NPCs, and GM notes\n"
-        "================================================================================\n"
-        f"{session_notes}\n"
-        "================================================================================\n"
-    ) if session_notes else ""
+    if session_notes:
+        blocks.append({
+            "type": "text",
+            "text": (
+                "================================================================================\n"
+                "SESSION NOTES — current session scenes, NPCs, and GM notes\n"
+                "================================================================================\n"
+                f"{session_notes}\n"
+                "================================================================================"
+            ),
+            "cache_control": {"type": "ephemeral"}
+        })
 
-    return f"""You are the narrating voice and NPC actor for a D&D 5e campaign.
+    # Instructions block is NOT cached — current_scene changes with /setscene
+    blocks.append({
+        "type": "text",
+        "text": f"""You are the narrating voice and NPC actor for a D&D 5e campaign.
 
 CAMPAIGN: {config.get('campaign_name', 'Unknown Campaign')}
 CURRENT SCENE: {config.get('current_scene', 'Unknown location')}
 TONE: {config.get('tone', 'Classic heroic fantasy')}
-{history_block}{notes_block}
+
 HOW TO READ THIS CONVERSATION:
 Messages prefixed with [TABLE] are live session events fed from the VTT —
 player chat, GM narration, dice rolls, combat mechanics. Absorb these silently
@@ -221,9 +241,9 @@ RESPONSE RULES:
   2-3 sentences of behaviour and body language. No spoken dialogue.
 - /combatsummary: describe recent combat rolls and actions as vivid narrative.
   What the players see and feel. No mechanics or dice numbers.
+- /describe: pure sensory description only. Address players as "you".
 - /claude: answer the GM's question helpfully and specifically. Draw on all
   available context — history, session notes, and live table events.
-- /setscene: acknowledge the new scene. You will use it to focus subsequent responses.
 - Never mention dice, stats, or game mechanics unless the GM explicitly asks.
 - Never break the fourth wall.
 - Never reveal GM secrets from the session notes (future plans, hidden motives,
@@ -239,6 +259,9 @@ RESPONSE RULES:
   Stop when the content stops. Do not round off.
 - Be concise. This is a game, not a novel. Every sentence must earn its place.
 - Tone: {config.get('tone', 'classic heroic fantasy')}."""
+    })
+
+    return blocks
 
 # ---------------------------------------------------------------------------
 # Request processing
@@ -312,13 +335,24 @@ def process_request(req: dict) -> tuple[str, str]:
 
     client   = anthropic.Anthropic()
     response = client.messages.create(
-        model      = config.get("model", "claude-sonnet-4-6"),
-        max_tokens = max_tok,
-        system     = build_system_prompt(),
-        messages   = conversation_history,
+        model         = config.get("model", "claude-sonnet-4-6"),
+        max_tokens    = max_tok,
+        system        = build_system_prompt(),   # list of blocks with cache_control
+        messages      = conversation_history,
+        extra_headers = {"anthropic-beta": "prompt-caching-2024-07-31"}
     )
     reply = response.content[0].text.strip()
     conversation_history.append({"role": "assistant", "content": reply})
+
+    # Show cache status in terminal so GM can see when caching is active
+    usage = response.usage
+    cached = getattr(usage, "cache_read_input_tokens", 0) or 0
+    created = getattr(usage, "cache_creation_input_tokens", 0) or 0
+    if cached > 0:
+        print(f"  [cache] HIT — {cached:,} tokens read from cache ✓")
+    elif created > 0:
+        print(f"  [cache] BUILT — {created:,} tokens cached for next call")
+
     return reply, req_type
 
 # ---------------------------------------------------------------------------
