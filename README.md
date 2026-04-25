@@ -200,16 +200,7 @@ Both files are plain markdown — edit them in any text editor, or use a tool
 like Obsidian or VS Code. You can use a Claude.ai project to help write and
 maintain them between sessions.
 
-### 2. Update bridge_config.json
-
-Set `current_scene` to where the session begins:
-```json
-{
-  "current_scene": "The Blue Water Inn, Vallaki — common room, evening"
-}
-```
-
-### 3. Start the server
+### 2. Start the server
 
 Open Command Prompt in your working folder and run:
 ```
@@ -329,20 +320,41 @@ progresses. When a session is done, move the key events into
 
 ```json
 {
-  "campaign_name": "Curse of Strahd",
-  "current_scene": "Old Bonegrinder — Ground Floor",
-  "tone": "Gothic horror / dark fairy tale.",
   "model": "claude-haiku-4-5",
   "max_tokens": 400,
   "max_tokens_long": 800
 }
 ```
 
+`bridge_config.json` contains only technical settings. You should not need to
+edit it between sessions.
+
 `max_tokens` applies to `/npctalk` and `/npcaction` — dialogue and actions
 should be short. `max_tokens_long` applies to `/describe`, `/combatsummary`,
 and `/claude` where more room is needed.
 
 For available model identifiers see: https://docs.anthropic.com/en/docs/about-claude/models
+
+### Campaign name, scene, and tone — read from markdown
+
+`campaign_name`, `current_scene`, and `tone` are no longer in `bridge_config.json`.
+The server reads them directly from your markdown files at startup using these
+labelled fields:
+
+In `campaign_history.md`:
+```
+**Campaign:** Curse of Strahd
+```
+
+In `session_notes.md`:
+```
+**Opening Scene:** Old Bonegrinder — Ground Floor (Area O1)
+**Tone:** Gothic horror / dark fairy tale. Hags are charming, not monstrous.
+```
+
+Update these fields in your markdown files as part of normal session prep.
+The `Opening Scene` sets the starting value of `current_scene` — use `/setscene`
+during play to update it as the party moves around.
 
 ---
 

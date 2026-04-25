@@ -61,6 +61,34 @@ def load_config() -> dict:
     with open(CONFIG_FILE, encoding="utf-8") as f:
         return json.load(f)
 
+
+def extract_field(text: str, field: str) -> str:
+    """Extract a **Field:** value from a markdown file. Returns empty string if not found."""
+    escaped = re.escape(field)
+    m = re.search(r'^\*\*' + escaped + r':\*\*\s*(.+)$', text, re.MULTILINE)
+    return m.group(1).strip() if m else ""
+
+
+def load_meta_from_markdown(history: str, notes: str) -> dict:
+    """
+    Read campaign_name from campaign_history.md and
+    current_scene and tone from session_notes.md.
+    These replace the equivalent fields previously in bridge_config.json.
+    """
+    campaign_name  = extract_field(history, "Campaign")  or "Unknown Campaign"
+    current_scene  = extract_field(notes,   "Opening Scene") or "Unknown location"
+    tone           = extract_field(notes,   "Tone") or "Classic heroic fantasy"
+
+    print(f"  Campaign     : {campaign_name}")
+    print(f"  Opening scene: {current_scene}")
+    print(f"  Tone         : {tone[:60]}{'...' if len(tone) > 60 else ''}")
+
+    return {
+        "campaign_name":  campaign_name,
+        "current_scene":  current_scene,
+        "tone":           tone,
+    }
+
 def load_markdown(path: Path, label: str) -> str:
     if not path.exists():
         print(f"  WARNING: {path} not found — Claude will run without {label}.")
@@ -462,12 +490,15 @@ def main():
     config           = load_config()
     campaign_history = load_markdown(HISTORY_FILE, "Campaign history")
     session_notes    = load_markdown(NOTES_FILE,   "Session notes  ")
+
+    # Read campaign_name, current_scene, tone from markdown files
+    meta = load_meta_from_markdown(campaign_history, session_notes)
+    config.update(meta)
+
     init_file_positions()
     last_flush_time  = time.time()
 
-    print(f"\nCampaign : {config.get('campaign_name','—')}")
-    print(f"Scene    : {config.get('current_scene','—')}")
-    print(f"Model    : {config.get('model','—')}  "
+    print(f"\nModel    : {config.get('model','—')}  "
           f"(max {config.get('max_tokens','—')} tokens/response)")
     print(f"\nListening. Claude will silently absorb session events in real-time.")
     print(f"Commands in FGU: /claude  /npctalk (Name)  /npcaction (Name)"

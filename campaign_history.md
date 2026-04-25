@@ -1,6 +1,8 @@
 # Curse of Strahd — Campaign History
 # What Has Been
 
+**Campaign:** Curse of Strahd
+
 This file is loaded by the Claude AI Bridge at startup. Update it after each
 session to capture what happened, how NPCs were portrayed, how the PCs behaved,
 and what story threads are now live. The more specific this is, the more grounded

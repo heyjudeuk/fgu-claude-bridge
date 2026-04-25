@@ -5,6 +5,9 @@ Update this file before each session. Add new SCENE sections for every location
 the party might reach. When the session is done, move the key events into
 campaign_history.md and refresh this file for the next session.
 
+**Opening Scene:** Old Bonegrinder — Ground Floor (Area O1)
+**Tone:** Gothic horror / dark fairy tale. Hags are charming, not monstrous. Dread creeps; it does not announce itself.
+
 ---
 
 ## SESSION OVERVIEW
