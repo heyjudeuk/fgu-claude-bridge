@@ -4,5 +4,16 @@
   "tone": "Gothic horror / dark fairy tale. Hags are charming, not monstrous. Dread creeps; it does not announce itself.",
   "model": "claude-haiku-4-5",
   "max_tokens": 400,
-  "max_tokens_long": 800
+  "max_tokens_long": 800,
+  "_notes": {
+    "model_reference": "https://docs.anthropic.com/en/docs/about-claude/models",
+    "available_models": [
+      "claude-haiku-4-5",
+      "claude-sonnet-4-6",
+      "claude-opus-4-7"
+    ],
+    "model_notes": "Use alias IDs (no date suffix) to always get the latest version of that model. Check model_reference URL for current identifiers as these change with new releases.",
+    "max_tokens": "Token limit for short responses: /npctalk and /npcaction",
+    "max_tokens_long": "Token limit for longer responses: /describe, /combatsummary and /claude"
+  }
 }
