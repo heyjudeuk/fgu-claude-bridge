@@ -19,10 +19,11 @@ function onInit()
     Comm.registerSlashHandler("npcaction",     cmdNPCAction,     "/npcaction (NPC name) [prompt] - NPC action or reaction")
     Comm.registerSlashHandler("combatsummary", cmdCombatSummary, "/combatsummary - Narrative description of recent combat")
     Comm.registerSlashHandler("setscene",      cmdSetScene,      "/setscene [description] - Update scene, reset history")
-    Comm.registerSlashHandler("claudereset",   cmdReset,         "/claudereset - Clear conversation history")
+    Comm.registerSlashHandler("claudeundo",    cmdUndo,          "/claudeundo - Remove last entry from conversation history")
+    Comm.registerSlashHandler("claudereset",   cmdReset,         "/claudereset - Clear all conversation history")
 
     ChatManager.SystemMessage("[Claude Bridge] Loaded.")
-    ChatManager.SystemMessage("[Claude Bridge] /claude  /describe  /npctalk (Name)  /npcaction (Name)  /combatsummary  /setscene  /claudereset")
+    ChatManager.SystemMessage("[Claude Bridge] /claude  /describe  /npctalk (Name)  /npcaction (Name)  /combatsummary  /setscene  /claudeundo  /claudereset")
 end
 
 -- ---------------------------------------------------------------------------
@@ -115,6 +116,11 @@ function cmdSetScene(sCommand, sParams)
         return
     end
     sendRequest("set_scene", sParams, nil)
+end
+
+-- /claudeundo — remove the last entry from conversation history
+function cmdUndo(sCommand, sParams)
+    sendRequest("undo", "undo", nil)
 end
 
 -- /claudereset

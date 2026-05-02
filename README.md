@@ -56,6 +56,8 @@ conversation history — Claude remembers everything from earlier in the session
 /setscene the party has reached the cage room and found the children
 ```
 
+** /claudeundo ** — removes the last entry from conversation history. It removes entries in pairs to keep the conversation structure valid.
+
 **`/claudereset`** — Clears all conversation history and the chatlog buffer.
 Use this only when you want a genuine fresh start.
 

@@ -286,6 +286,7 @@ RESPONSE RULES:
 - Never add concluding statements, narrative closure, or summarising sentences.
   Stop when the content stops. Do not round off.
 - Be concise. This is a game, not a novel. Every sentence must earn its place.
+- Never use em dashes (—) in any response. Use commas, colons, or semicolons instead.
 - Tone: {config.get('tone', 'classic heroic fantasy')}."""
     })
 
@@ -303,6 +304,19 @@ def process_request(req: dict) -> tuple[str, str]:
         conversation_history = []
         pending_events.clear()
         return "Conversation history and event buffer cleared.", "system"
+
+    if req_type == "undo":
+        if not conversation_history:
+            return "Nothing to undo.", "system"
+        # Remove the last user message (chatlog event or GM command)
+        # Always remove in pairs to keep user/assistant alternation valid
+        removed = conversation_history[-2]["content"][:80] if len(conversation_history) >= 2 else ""
+        if len(conversation_history) >= 2:
+            conversation_history.pop()
+            conversation_history.pop()
+        else:
+            conversation_history.pop()
+        return f"Last entry removed from history: {removed}...", "system"
 
     if req_type == "set_scene":
         config["current_scene"] = req.get("message", "")
@@ -337,6 +351,8 @@ def process_request(req: dict) -> tuple[str, str]:
         user_msg = (f"NPC: {npc}{direction}\n"
                     f"Describe ONLY what {npc} physically does or how they react. "
                     f"2-3 sentences of action and body language. "
+                    f"The first sentence MUST begin with {npc}'s name, not a pronoun. "
+                    f"Subsequent sentences may use pronouns. "
                     f"Absolutely no spoken dialogue or quoted speech whatsoever.")
 
     elif req_type == "combat_summary":
